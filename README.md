@@ -4,6 +4,12 @@ Merge multiple PDF files into a single PDF using Ghostscript.
 
 This library uses the Ghostscript CLI to efficiently merge PDF files on Linux or any environment where Ghostscript is installed.
 
+## Why this library?
+
+There are many PDF merger libraries out there, but most rely on **FPDI**, which has limitations in its free version—especially when dealing with certain types of PDFs.
+
+We created **pdf-merger** as a simple alternative that uses **Ghostscript** instead, offering a reliable and unrestricted solution for merging PDFs without those limitations.
+
 ## Requirements
 
 - PHP 5.6 or above  
