@@ -1,0 +1,20 @@
+{
+    "name": "ngekoding/pdf-merger",
+    "description": "Merge multiple PDF files into a single PDF using Ghostscript.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+      {
+        "name": "Nur Muhammad",
+        "email": "blog.nurmuhammad@gmail.com"
+      }
+    ],
+    "autoload": {
+      "psr-4": { 
+        "Ngekoding\\PdfMerger\\": "src/" 
+      }
+    },
+    "require": {
+        "symfony/process": "*"
+    }
+}
