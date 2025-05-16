@@ -89,17 +89,24 @@ $merger->setGsPath('/usr/local/bin/gs');
 
 ### Setting compression level
 
-Control the output PDF compression level with one of these presets:
-
-- `/screen` (lowest quality, smallest size)
-- `/ebook`
-- `/printer`
-- `/prepress`
-- `/default` (default setting)
+You can choose one of the predefined Ghostscript compression levels using the `setCompressionLevel()` method. The library provides constants for convenience:
 
 ```php
-$merger->setCompressionLevel('/ebook');
+use Ngekoding\PdfMerger\CompressionLevel;
+
+$merger = new PdfMerger();
+$merger->setCompressionLevel(CompressionLevel::SCREEN);   // Lower quality, smaller size
+$merger->setCompressionLevel(CompressionLevel::EBOOK);    // Medium quality
+$merger->setCompressionLevel(CompressionLevel::PRINTER);  // High quality for printing
+$merger->setCompressionLevel(CompressionLevel::PREPRESS); // Highest quality with color profiles
+$merger->setCompressionLevel(CompressionLevel::DEFAULT);  // Balanced default
+$merger->setCompressionLevel(CompressionLevel::NONE);     // No compression – closest to original
 ```
+
+**Note:**
+Using `CompressionLevel::NONE` will skip the `-dPDFSETTINGS` parameter entirely, resulting in output that is as close as possible to the original quality.
+
+For more technical details, you can refer to the [Ghostscript documentation](https://ghostscript.readthedocs.io/en/latest/VectorDevices.html#controls-and-features-specific-to-postscript-and-pdf-input).
 
 ### Setting process timeout
 

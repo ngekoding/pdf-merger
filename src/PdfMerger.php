@@ -8,13 +8,12 @@ use Symfony\Component\Process\Process;
 class PdfMerger
 {
     private $gsPath = 'gs';
-    private $compressionLevel = '/default';
+    private $compressionLevel = CompressionLevel::DEFAULT;
     private $inputFiles = [];
     private $outputFile = null;
     private $outputFolder = null;
     private $outputFilename = null;
     private $timeout = 60;
-
 
     public function __construct()
     {
@@ -41,7 +40,7 @@ class PdfMerger
      */
     public function reset()
     {
-        $this->compressionLevel = '/default';
+        $this->compressionLevel = CompressionLevel::DEFAULT;
         $this->inputFiles = [];
         $this->outputFile = null;
         $this->outputFolder = sys_get_temp_dir();
@@ -72,18 +71,14 @@ class PdfMerger
     /**
      * Sets the compression level.
      *
-     * Valid values: /screen, /ebook, /printer, /prepress, /default
-     *
      * @param string $level
      * 
      * @return $this
      * @throws \InvalidArgumentException
      */
     public function setCompressionLevel($level)
-    {
-        $allowed = ['/screen', '/ebook', '/printer', '/prepress', '/default'];
-        
-        if (!in_array($level, $allowed, true)) {
+    {   
+        if (!in_array($level, CompressionLevel::all(), true)) {
             throw new \InvalidArgumentException("Invalid compression level: $level");
         }
 
@@ -180,6 +175,38 @@ class PdfMerger
     }
 
     /**
+     * Build the Ghostscript command array.
+     *
+     * @param $finalOutputFile The fully resolved path for the output PDF file.
+     * 
+     * @return array
+     */
+    private function buildCommand($finalOutputFile)
+    {
+        $baseOptions = [
+            $this->gsPath,
+            '-dBATCH',
+            '-dNOPAUSE',
+            '-q',
+            '-sDEVICE=pdfwrite',
+        ];
+
+        $compressionOption = [];
+        if ($this->compressionLevel !== CompressionLevel::NONE) {
+            $compressionOption = ['-dPDFSETTINGS=' . $this->compressionLevel];
+        }
+
+        $outputOption = ['-sOutputFile=' . $finalOutputFile];
+
+        return array_merge(
+            $baseOptions,
+            $compressionOption,
+            $outputOption,
+            $this->inputFiles
+        );
+    }
+
+    /**
      * Merges the input PDF files into a single output file.
      *
      * @return string The path to the merged PDF file.
@@ -192,23 +219,17 @@ class PdfMerger
             throw new \RuntimeException('At least two PDF files are required for merging.');
         }
 
-        if ( ! $this->outputFile) {
+        $finalOutputFile = $this->outputFile;
+
+        if ( ! $finalOutputFile) {
             $filename = !empty($this->outputFilename)
                 ? $this->outputFilename
                 : ('merged_' . date('Ymd_His') . '.pdf');
 
-            $this->outputFile = $this->outputFolder . DIRECTORY_SEPARATOR . $filename;
+            $finalOutputFile = $this->outputFolder . DIRECTORY_SEPARATOR . $filename;
         }
 
-        $command = array_merge([
-            $this->gsPath,
-            '-dBATCH',
-            '-dNOPAUSE',
-            '-q',
-            '-sDEVICE=pdfwrite',
-            '-dPDFSETTINGS=' . $this->compressionLevel,
-            '-sOutputFile=' . $this->outputFile,
-        ], $this->inputFiles);
+        $command = $this->buildCommand($finalOutputFile);
 
         $process = new Process($command);
         $process->setTimeout($this->timeout);
@@ -218,10 +239,10 @@ class PdfMerger
             throw new ProcessFailedException($process);
         }
 
-        if ( ! file_exists($this->outputFile)) {
+        if ( ! file_exists($finalOutputFile)) {
             throw new \RuntimeException("Merging failed: Output file not created.");
         }
 
-        return $this->outputFile;
+        return $finalOutputFile;
     }
 }
